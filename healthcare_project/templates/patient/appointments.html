@@ -1,0 +1,363 @@
+<!-- templates/patient/appointments.html -->
+{% extends 'base.html' %}
+
+{% block title %}My Appointments{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3 col-lg-2">
+            <div class="card shadow mb-4">
+                <div class="card-body text-center">
+                    {% if user.profile_picture %}
+                        <img src="{{ user.profile_picture.url }}" alt="{{ user.get_full_name }}" class="rounded-circle img-fluid mb-3" style="width: 100px; height: 100px; object-fit: cover;">
+                    {% else %}
+                        <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 100px; height: 100px;">
+                            <i class="fas fa-user fa-3x text-white"></i>
+                        </div>
+                    {% endif %}
+                    <h5 class="mb-0">{{ user.get_full_name }}</h5>
+                    <p class="text-muted">Patient</p>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="{% url 'patient:dashboard' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-tachometer-alt me-2"></i> Dashboard
+                    </a>
+                    <a href="{% url 'patient:appointments' %}" class="list-group-item list-group-item-action active">
+                        <i class="fas fa-calendar-check me-2"></i> Appointments
+                    </a>
+                    <a href="{% url 'patient:medical_records' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-file-medical me-2"></i> Medical Records
+                    </a>
+                    <a href="{% url 'patient:prescriptions' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-prescription me-2"></i> Prescriptions
+                    </a>
+                    <a href="{% url 'patient:bills' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-file-invoice-dollar me-2"></i> Bills
+                    </a>
+                    <a href="{% url 'patient:insurance' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-shield-alt me-2"></i> Insurance
+                    </a>
+                    <a href="{% url 'patient:search_doctors' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-user-md me-2"></i> Find Doctors
+                    </a>
+                    <a href="{% url 'accounts:profile' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-user-edit me-2"></i> Profile
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="col-md-9 col-lg-10">
+            <div class="row mb-4 align-items-center">
+                <div class="col">
+                    <h1 class="h3 mb-0 text-gray-800">My Appointments</h1>
+                    <p class="text-muted">Manage your scheduled appointments</p>
+                </div>
+                <div class="col-auto">
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newAppointmentModal">
+                        <i class="fas fa-plus me-2"></i>New Appointment
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Appointment Filters -->
+            <div class="card shadow mb-4">
+                <div class="card-header bg-light">
+                    <h6 class="m-0 font-weight-bold">Filter Appointments</h6>
+                </div>
+                <div class="card-body">
+                    <form method="get" action="{% url 'patient:appointments' %}">
+                        <div class="row">
+                            <div class="col-md-3 mb-3">
+                                <label for="status" class="form-label">Status</label>
+                                <select name="status" id="status" class="form-select">
+                                    <option value="">All Statuses</option>
+                                    <option value="SCHEDULED" {% if request.GET.status == 'SCHEDULED' %}selected{% endif %}>Scheduled</option>
+                                    <option value="COMPLETED" {% if request.GET.status == 'COMPLETED' %}selected{% endif %}>Completed</option>
+                                    <option value="CANCELLED" {% if request.GET.status == 'CANCELLED' %}selected{% endif %}>Cancelled</option>
+                                    <option value="NO_SHOW" {% if request.GET.status == 'NO_SHOW' %}selected{% endif %}>No Show</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="date_from" class="form-label">From Date</label>
+                                <input type="date" name="date_from" id="date_from" class="form-control" value="{{ request.GET.date_from }}">
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="date_to" class="form-label">To Date</label>
+                                <input type="date" name="date_to" id="date_to" class="form-control" value="{{ request.GET.date_to }}">
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="doctor" class="form-label">Doctor</label>
+                                <select name="doctor" id="doctor" class="form-select">
+                                    <option value="">All Doctors</option>
+                                    {% for doctor in doctors %}
+                                        <option value="{{ doctor.id }}" {% if request.GET.doctor == doctor.id|stringformat:'i' %}selected{% endif %}>
+                                            Dr. {{ doctor.user.get_full_name }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-end">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-filter me-2"></i>Apply Filters
+                            </button>
+                            <a href="{% url 'patient:appointments' %}" class="btn btn-secondary ms-2">
+                                <i class="fas fa-sync-alt me-2"></i>Reset
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Appointments List -->
+            <div class="card shadow mb-4">
+                <div class="card-header bg-light">
+                    <h6 class="m-0 font-weight-bold">Your Appointments</h6>
+                </div>
+                <div class="card-body">
+                    {% if appointments %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Time</th>
+                                        <th>Doctor</th>
+                                        <th>Reason</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for appointment in appointments %}
+                                        <tr>
+                                            <td>{{ appointment.appointment_date }}</td>
+                                            <td>{{ appointment.appointment_time }}</td>
+                                            <td>Dr. {{ appointment.doctor.user.get_full_name }}</td>
+                                            <td>{{ appointment.reason|truncatechars:30 }}</td>
+                                            <td>
+                                                {% if appointment.status == 'SCHEDULED' %}
+                                                    <span class="badge bg-primary">Scheduled</span>
+                                                {% elif appointment.status == 'COMPLETED' %}
+                                                    <span class="badge bg-success">Completed</span>
+                                                {% elif appointment.status == 'CANCELLED' %}
+                                                    <span class="badge bg-danger">Cancelled</span>
+                                                {% elif appointment.status == 'NO_SHOW' %}
+                                                    <span class="badge bg-warning">No Show</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <a href="{% url 'patient:appointment_detail' appointment.id %}" class="btn btn-sm btn-info me-1" title="View">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                {% if appointment.status == 'SCHEDULED' and appointment.appointment_date >= today %}
+                                                    <a href="{% url 'patient:cancel_appointment' appointment.id %}" class="btn btn-sm btn-danger" title="Cancel">
+                                                        <i class="fas fa-times"></i>
+                                                    </a>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- Pagination -->
+                        {% if appointments.has_other_pages %}
+                            <nav aria-label="Page navigation" class="mt-4">
+                                <ul class="pagination justify-content-center">
+                                    {% if appointments.has_previous %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="First">
+                                                <span aria-hidden="true">&laquo;&laquo;</span>
+                                            </a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ appointments.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Previous">
+                                                <span aria-hidden="true">&laquo;</span>
+                                            </a>
+                                        </li>
+                                    {% else %}
+                                        <li class="page-item disabled">
+                                            <a class="page-link" href="#" aria-label="First">
+                                                <span aria-hidden="true">&laquo;&laquo;</span>
+                                            </a>
+                                        </li>
+                                        <li class="page-item disabled">
+                                            <a class="page-link" href="#" aria-label="Previous">
+                                                <span aria-hidden="true">&laquo;</span>
+                                            </a>
+                                        </li>
+                                    {% endif %}
+                                    
+                                    {% for num in appointments.paginator.page_range %}
+                                        {% if appointments.number == num %}
+                                            <li class="page-item active">
+                                                <span class="page-link">{{ num }}</span>
+                                            </li>
+                                        {% elif num > appointments.number|add:'-3' and num < appointments.number|add:'3' %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ num }}</a>
+                                            </li>
+                                        {% endif %}
+                                    {% endfor %}
+                                    
+                                    {% if appointments.has_next %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ appointments.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Next">
+                                                <span aria-hidden="true">&raquo;</span>
+                                            </a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ appointments.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Last">
+                                                <span aria-hidden="true">&raquo;&raquo;</span>
+                                            </a>
+                                        </li>
+                                    {% else %}
+                                        <li class="page-item disabled">
+                                            <a class="page-link" href="#" aria-label="Next">
+                                                <span aria-hidden="true">&raquo;</span>
+                                            </a>
+                                        </li>
+                                        <li class="page-item disabled">
+                                            <a class="page-link" href="#" aria-label="Last">
+                                                <span aria-hidden="true">&raquo;&raquo;</span>
+                                            </a>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-calendar-times fa-4x text-muted mb-4"></i>
+                            <h4>No Appointments Found</h4>
+                            <p class="text-muted">You don't have any appointments that match your filters.</p>
+                            <button type="button" class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#newAppointmentModal">
+                                <i class="fas fa-plus me-2"></i>Schedule New Appointment
+                            </button>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- New Appointment Modal -->
+<div class="modal fade" id="newAppointmentModal" tabindex="-1" aria-labelledby="newAppointmentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="newAppointmentModalLabel">Schedule New Appointment</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form method="post" action="{% url 'patient:appointments' %}">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="id_doctor" class="form-label">Select Doctor</label>
+                        {{ form.doctor }}
+                        {% if form.doctor.errors %}
+                            <div class="text-danger small">
+                                {% for error in form.doctor.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <div class="form-text">{{ form.doctor.help_text }}</div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="id_appointment_date" class="form-label">Appointment Date</label>
+                            {{ form.appointment_date }}
+                            {% if form.appointment_date.errors %}
+                                <div class="text-danger small">
+                                    {% for error in form.appointment_date.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">{{ form.appointment_date.help_text }}</div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="id_appointment_time" class="form-label">Appointment Time</label>
+                            {{ form.appointment_time }}
+                            {% if form.appointment_time.errors %}
+                                <div class="text-danger small">
+                                    {% for error in form.appointment_time.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">{{ form.appointment_time.help_text }}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="id_reason" class="form-label">Reason for Appointment</label>
+                        {{ form.reason }}
+                        {% if form.reason.errors %}
+                            <div class="text-danger small">
+                                {% for error in form.reason.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <div class="form-text">{{ form.reason.help_text }}</div>
+                    </div>
+                    
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {% for error in form.non_field_errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">Schedule Appointment</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Auto-open modal if there are form errors
+        /* {% if form.errors %} */
+            let appointmentModal = new bootstrap.Modal(document.getElementById('newAppointmentModal'));
+            appointmentModal.show();
+        /* {% endif %} */
+        
+        // Update available times based on doctor and date selection
+        const doctorSelect = document.getElementById('id_doctor');
+        const dateInput = document.getElementById('id_appointment_date');
+        
+        function updateAvailableTimeSlots() {
+            const doctorId = doctorSelect.value;
+            const date = dateInput.value;
+            
+            if (!doctorId || !date) return;
+            
+            // AJAX call to get available time slots would go here
+            // This is a placeholder for the actual implementation
+            console.log(`Fetching available slots for doctor ${doctorId} on ${date}`);
+        }
+        
+        doctorSelect.addEventListener('change', updateAvailableTimeSlots);
+        dateInput.addEventListener('change', updateAvailableTimeSlots);
+    });
+</script>
+{% endblock %}

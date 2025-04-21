@@ -1,0 +1,356 @@
+<!-- templates/patient/dashboard.html -->
+{% extends 'base.html' %}
+
+{% block title %}Patient Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3 col-lg-2">
+            <div class="card shadow mb-4">
+                <div class="card-body text-center">
+                    {% if user.profile_picture %}
+                        <img src="{{ user.profile_picture.url }}" alt="{{ user.get_full_name }}" class="rounded-circle img-fluid mb-3" style="width: 100px; height: 100px; object-fit: cover;">
+                    {% else %}
+                        <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 100px; height: 100px;">
+                            <i class="fas fa-user fa-3x text-white"></i>
+                        </div>
+                    {% endif %}
+                    <h5 class="mb-0">{{ user.get_full_name }}</h5>
+                    <p class="text-muted">Patient</p>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="{% url 'patient:dashboard' %}" class="list-group-item list-group-item-action active">
+                        <i class="fas fa-tachometer-alt me-2"></i> Dashboard
+                    </a>
+                    <a href="{% url 'patient:appointments' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-calendar-check me-2"></i> Appointments
+                    </a>
+                    <a href="{% url 'patient:medical_records' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-file-medical me-2"></i> Medical Records
+                    </a>
+                    <a href="{% url 'patient:prescriptions' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-prescription me-2"></i> Prescriptions
+                    </a>
+                    <a href="{% url 'patient:bills' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-file-invoice-dollar me-2"></i> Bills
+                    </a>
+                    <a href="{% url 'patient:insurance' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-shield-alt me-2"></i> Insurance
+                    </a>
+                    <a href="{% url 'patient:search_doctors' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-user-md me-2"></i> Find Doctors
+                    </a>
+                    <a href="{% url 'accounts:profile' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-user-edit me-2"></i> Profile
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="col-md-9 col-lg-10">
+            <div class="row mb-4">
+                <div class="col">
+                    <h1 class="h3 mb-0 text-gray-800">Dashboard</h1>
+                    <p class="text-muted">Welcome back, {{ user.first_name }}!</p>
+                </div>
+            </div>
+            
+            <!-- Quick Stats -->
+            <div class="row mb-4">
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-primary shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                        Upcoming Appointments</div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ upcoming_appointments.count }}</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-calendar-check fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-success shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                        Active Prescriptions</div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ recent_prescriptions.count }}</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-prescription fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-info shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                        Pending Bills</div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ pending_bills.count }}</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-file-invoice-dollar fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-warning shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                        Medical Records</div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ recent_medical_records.count }}</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-file-medical fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <!-- Upcoming Appointments -->
+                <div class="col-xl-6 mb-4">
+                    <div class="card shadow">
+                        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                            <h6 class="m-0 font-weight-bold">Upcoming Appointments</h6>
+                            <a href="{% url 'patient:appointments' %}" class="btn btn-sm btn-light">View All</a>
+                        </div>
+                        <div class="card-body">
+                            {% if upcoming_appointments %}
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Date</th>
+                                                <th>Time</th>
+                                                <th>Doctor</th>
+                                                <th>Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for appointment in upcoming_appointments %}
+                                                <tr>
+                                                    <td>{{ appointment.appointment_date }}</td>
+                                                    <td>{{ appointment.appointment_time }}</td>
+                                                    <td>Dr. {{ appointment.doctor.user.get_full_name }}</td>
+                                                    <td>
+                                                        <a href="{% url 'patient:appointment_detail' appointment.id %}" class="btn btn-sm btn-info">
+                                                            <i class="fas fa-eye"></i>
+                                                        </a>
+                                                    </td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% else %}
+                                <div class="text-center py-4">
+                                    <i class="fas fa-calendar fa-3x text-muted mb-3"></i>
+                                    <p>You don't have any upcoming appointments.</p>
+                                    <a href="{% url 'patient:appointments' %}" class="btn btn-primary">Schedule Appointment</a>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Recent Prescriptions -->
+                <div class="col-xl-6 mb-4">
+                    <div class="card shadow">
+                        <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                            <h6 class="m-0 font-weight-bold">Recent Prescriptions</h6>
+                            <a href="{% url 'patient:prescriptions' %}" class="btn btn-sm btn-light">View All</a>
+                        </div>
+                        <div class="card-body">
+                            {% if recent_prescriptions %}
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Date</th>
+                                                <th>Doctor</th>
+                                                <th>Status</th>
+                                                <th>Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for prescription in recent_prescriptions %}
+                                                <tr>
+                                                    <td>{{ prescription.date_prescribed }}</td>
+                                                    <td>Dr. {{ prescription.doctor.user.get_full_name }}</td>
+                                                    <td>
+                                                        {% if prescription.is_active %}
+                                                            <span class="badge bg-success">Active</span>
+                                                        {% else %}
+                                                            <span class="badge bg-secondary">Inactive</span>
+                                                        {% endif %}
+                                                    </td>
+                                                    <td>
+                                                        <a href="{% url 'patient:prescription_detail' prescription.id %}" class="btn btn-sm btn-info">
+                                                            <i class="fas fa-eye"></i>
+                                                        </a>
+                                                    </td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% else %}
+                                <div class="text-center py-4">
+                                    <i class="fas fa-prescription fa-3x text-muted mb-3"></i>
+                                    <p>You don't have any recent prescriptions.</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <!-- Recent Medical Records -->
+                <div class="col-xl-6 mb-4">
+                    <div class="card shadow">
+                        <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                            <h6 class="m-0 font-weight-bold">Recent Medical Records</h6>
+                            <a href="{% url 'patient:medical_records' %}" class="btn btn-sm btn-light">View All</a>
+                        </div>
+                        <div class="card-body">
+                            {% if recent_medical_records %}
+                                <div class="list-group">
+                                    {% for record in recent_medical_records %}
+                                        <a href="{% url 'patient:medical_record_detail' record.id %}" class="list-group-item list-group-item-action">
+                                            <div class="d-flex w-100 justify-content-between">
+                                                <h6 class="mb-1">Dr. {{ record.doctor.user.get_full_name }}</h6>
+                                                <small>{{ record.date_created|date:"F d, Y" }}</small>
+                                            </div>
+                                            <p class="mb-1 text-truncate">{{ record.diagnosis }}</p>
+                                            <small class="text-muted">Click to view details</small>
+                                        </a>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="text-center py-4">
+                                    <i class="fas fa-file-medical fa-3x text-muted mb-3"></i>
+                                    <p>You don't have any medical records yet.</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Pending Bills -->
+                <div class="col-xl-6 mb-4">
+                    <div class="card shadow">
+                        <div class="card-header bg-warning text-white d-flex justify-content-between align-items-center">
+                            <h6 class="m-0 font-weight-bold">Pending Bills</h6>
+                            <a href="{% url 'patient:bills' %}" class="btn btn-sm btn-light">View All</a>
+                        </div>
+                        <div class="card-body">
+                            {% if pending_bills %}
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Description</th>
+                                                <th>Amount</th>
+                                                <th>Due Date</th>
+                                                <th>Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for bill in pending_bills %}
+                                                <tr>
+                                                    <td>{{ bill.description|truncatechars:30 }}</td>
+                                                    <td>${{ bill.total_amount }}</td>
+                                                    <td>
+                                                        {% if bill.due_date < today %}
+                                                            <span class="text-danger">{{ bill.due_date }}</span>
+                                                        {% else %}
+                                                            {{ bill.due_date }}
+                                                        {% endif %}
+                                                    </td>
+                                                    <td>
+                                                        <a href="{% url 'patient:bill_detail' bill.id %}" class="btn btn-sm btn-primary">
+                                                            Pay Now
+                                                        </a>
+                                                    </td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% else %}
+                                <div class="text-center py-4">
+                                    <i class="fas fa-file-invoice-dollar fa-3x text-muted mb-3"></i>
+                                    <p>You don't have any pending bills.</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Quick Actions -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card shadow">
+                        <div class="card-header bg-light">
+                            <h6 class="m-0 font-weight-bold">Quick Actions</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-3 mb-3 mb-md-0">
+                                    <a href="{% url 'patient:appointments' %}" class="btn btn-primary btn-lg btn-block d-flex flex-column align-items-center p-3">
+                                        <i class="fas fa-calendar-plus fa-2x mb-2"></i>
+                                        Book Appointment
+                                    </a>
+                                </div>
+                                <div class="col-md-3 mb-3 mb-md-0">
+                                    <a href="{% url 'patient:search_doctors' %}" class="btn btn-info btn-lg btn-block d-flex flex-column align-items-center p-3">
+                                        <i class="fas fa-user-md fa-2x mb-2"></i>
+                                        Find Doctor
+                                    </a>
+                                </div>
+                                <div class="col-md-3 mb-3 mb-md-0">
+                                    <a href="{% url 'patient:prescriptions' %}" class="btn btn-success btn-lg btn-block d-flex flex-column align-items-center p-3">
+                                        <i class="fas fa-prescription fa-2x mb-2"></i>
+                                        View Prescriptions
+                                    </a>
+                                </div>
+                                <div class="col-md-3">
+                                    <a href="{% url 'patient:bills' %}" class="btn btn-warning btn-lg btn-block d-flex flex-column align-items-center p-3">
+                                        <i class="fas fa-credit-card fa-2x mb-2"></i>
+                                        Pay Bills
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,389 @@
+<!-- templates/accounts/register.html -->
+{% extends 'base.html' %}
+
+{% block title %}Register{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-section {
+        display: none;
+    }
+    .form-section.active {
+        display: block;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-body p-5">
+                    <h2 class="text-center mb-4">Register</h2>
+                    
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <!-- User Type Selection -->
+                        <div class="mb-4">
+                            <label for="id_user_type" class="form-label">Register as</label>
+                            <select name="user_type" id="id_user_type" class="form-select form-select-lg">
+                                <option value="PATIENT">Patient</option>
+                                <option value="DOCTOR">Doctor</option>
+                                <option value="NURSE">Nurse</option>
+                                <option value="ADMIN">Administrator</option>
+                                <option value="PHARMACIST">Pharmacist</option>
+                                <option value="INSURANCE">Insurance Provider</option>
+                                <option value="LAB_TECH">Laboratory Technician</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Basic User Information -->
+                        <div class="row mb-3">
+                            <div class="col-md-6 mb-3">
+                                <label for="id_first_name" class="form-label">First Name</label>
+                                {{ user_form.first_name }}
+                                {% if user_form.first_name.errors %}
+                                    <div class="text-danger small">
+                                        {% for error in user_form.first_name.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="id_last_name" class="form-label">Last Name</label>
+                                {{ user_form.last_name }}
+                                {% if user_form.last_name.errors %}
+                                    <div class="text-danger small">
+                                        {% for error in user_form.last_name.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="id_email" class="form-label">Email</label>
+                            {{ user_form.email }}
+                            {% if user_form.email.errors %}
+                                <div class="text-danger small">
+                                    {% for error in user_form.email.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6 mb-3">
+                                <label for="id_password1" class="form-label">Password</label>
+                                {{ user_form.password1 }}
+                                {% if user_form.password1.errors %}
+                                    <div class="text-danger small">
+                                        {% for error in user_form.password1.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="id_password2" class="form-label">Confirm Password</label>
+                                {{ user_form.password2 }}
+                                {% if user_form.password2.errors %}
+                                    <div class="text-danger small">
+                                        {% for error in user_form.password2.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="id_phone_number" class="form-label">Phone Number</label>
+                            {{ user_form.phone_number }}
+                            {% if user_form.phone_number.errors %}
+                                <div class="text-danger small">
+                                    {% for error in user_form.phone_number.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="id_address" class="form-label">Address</label>
+                            {{ user_form.address }}
+                            {% if user_form.address.errors %}
+                                <div class="text-danger small">
+                                    {% for error in user_form.address.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="id_date_of_birth" class="form-label">Date of Birth</label>
+                            {{ user_form.date_of_birth }}
+                            {% if user_form.date_of_birth.errors %}
+                                <div class="text-danger small">
+                                    {% for error in user_form.date_of_birth.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="id_profile_picture" class="form-label">Profile Picture</label>
+                            {{ user_form.profile_picture }}
+                            {% if user_form.profile_picture.errors %}
+                                <div class="text-danger small">
+                                    {% for error in user_form.profile_picture.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Patient Specific Fields -->
+                        <div id="patient_fields" class="form-section active">
+                            <h4 class="mb-3">Patient Information</h4>
+                            
+                            <div class="mb-3">
+                                <label for="id_blood_group" class="form-label">Blood Group</label>
+                                {{ patient_form.blood_group }}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="id_emergency_contact_name" class="form-label">Emergency Contact Name</label>
+                                {{ patient_form.emergency_contact_name }}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="id_emergency_contact_number" class="form-label">Emergency Contact Number</label>
+                                {{ patient_form.emergency_contact_number }}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="id_allergies" class="form-label">Allergies</label>
+                                {{ patient_form.allergies }}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="id_chronic_diseases" class="form-label">Chronic Diseases</label>
+                                {{ patient_form.chronic_diseases }}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="id_insurance_provider" class="form-label">Insurance Provider</label>
+                                {{ patient_form.insurance_provider }}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="id_insurance_id" class="form-label">Insurance ID</label>
+                                {{ patient_form.insurance_id }}
+                            </div>
+                        </div>
+                        
+                        <!-- Doctor Specific Fields -->
+                        <div id="doctor_fields" class="form-section">
+                            <h4 class="mb-3">Doctor Information</h4>
+                            
+                            <div class="mb-3">
+                                <label for="id_specialization" class="form-label">Specialization</label>
+                                {{ doctor_form.specialization }}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="id_qualification" class="form-label">Qualification</label>
+                                {{ doctor_form.qualification }}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="id_license_number" class="form-label">License Number</label>
+                                {{ doctor_form.license_number }}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="id_years_of_experience" class="form-label">Years of Experience</label>
+                                {{ doctor_form.years_of_experience }}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="id_consultation_fee" class="form-label">Consultation Fee</label>
+                                {{ doctor_form.consultation_fee }}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="id_available_days" class="form-label">Available Days</label>
+                                {{ doctor_form.available_days }}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="id_available_times" class="form-label">Available Times</label>
+                                {{ doctor_form.available_times }}
+                            </div>
+                        </div>
+                        
+                        <!-- Nurse Specific Fields -->
+                        <div id="nurse_fields" class="form-section">
+                            <h4 class="mb-3">Nurse Information</h4>
+                            
+                            <div class="mb-3">
+                                <label for="id_qualification" class="form-label">Qualification</label>
+                                {{ nurse_form.qualification }}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="id_license_number" class="form-label">License Number</label>
+                                {{ nurse_form.license_number }}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="id_years_of_experience" class="form-label">Years of Experience</label>
+                                {{ nurse_form.years_of_experience }}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="id_department" class="form-label">Department</label>
+                                {{ nurse_form.department }}
+                            </div>
+                        </div>
+                        
+                        <!-- Pharmacist Specific Fields -->
+                        <div id="pharmacist_fields" class="form-section">
+                            <h4 class="mb-3">Pharmacist Information</h4>
+                            
+                            <div class="mb-3">
+                                <label for="id_qualification" class="form-label">Qualification</label>
+                                {{ pharmacist_form.qualification }}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="id_license_number" class="form-label">License Number</label>
+                                {{ pharmacist_form.license_number }}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="id_years_of_experience" class="form-label">Years of Experience</label>
+                                {{ pharmacist_form.years_of_experience }}
+                            </div>
+                        </div>
+                        
+                        <!-- Lab Technician Specific Fields -->
+                        <div id="lab_tech_fields" class="form-section">
+                            <h4 class="mb-3">Laboratory Technician Information</h4>
+                            
+                            <div class="mb-3">
+                                <label for="id_qualification" class="form-label">Qualification</label>
+                                {{ lab_tech_form.qualification }}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="id_specialization" class="form-label">Specialization</label>
+                                {{ lab_tech_form.specialization }}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="id_license_number" class="form-label">License Number</label>
+                                {{ lab_tech_form.license_number }}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="id_years_of_experience" class="form-label">Years of Experience</label>
+                                {{ lab_tech_form.years_of_experience }}
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2 mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg">Register</button>
+                        </div>
+                    </form>
+                    
+                    <div class="text-center mt-4">
+                        <p>Already have an account? <a href="{% url 'accounts:login' %}">Login here</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Add Bootstrap form classes to the form fields
+    document.addEventListener('DOMContentLoaded', function() {
+        // User form fields
+        document.getElementById('id_first_name').classList.add('form-control');
+        document.getElementById('id_last_name').classList.add('form-control');
+        document.getElementById('id_email').classList.add('form-control');
+        document.getElementById('id_password1').classList.add('form-control');
+        document.getElementById('id_password2').classList.add('form-control');
+        document.getElementById('id_phone_number').classList.add('form-control');
+        document.getElementById('id_address').classList.add('form-control');
+        document.getElementById('id_date_of_birth').classList.add('form-control');
+        document.getElementById('id_profile_picture').classList.add('form-control');
+        
+        // Add form-control class to all inputs and textareas in each section
+        const addFormControlClass = function(sectionId) {
+            const fields = document.querySelectorAll(`#${sectionId} input, #${sectionId} textarea`);
+            fields.forEach(field => {
+                field.classList.add('form-control');
+            });
+        };
+        
+        // Apply to all sections
+        addFormControlClass('patient_fields');
+        addFormControlClass('doctor_fields');
+        addFormControlClass('nurse_fields');
+        addFormControlClass('pharmacist_fields');
+        addFormControlClass('lab_tech_fields');
+        
+        // Toggle role-specific fields based on user type selection
+        const userTypeSelect = document.getElementById('id_user_type');
+        const patientSection = document.getElementById('patient_fields');
+        const doctorSection = document.getElementById('doctor_fields');
+        const nurseSection = document.getElementById('nurse_fields');
+        const pharmacistSection = document.getElementById('pharmacist_fields');
+        const labTechSection = document.getElementById('lab_tech_fields');
+        
+        function toggleFields() {
+            // Hide all sections first
+            patientSection.classList.remove('active');
+            doctorSection.classList.remove('active');
+            nurseSection.classList.remove('active');
+            pharmacistSection.classList.remove('active');
+            labTechSection.classList.remove('active');
+            
+            // Show section based on selection
+            const userType = userTypeSelect.value;
+            
+            if (userType === 'PATIENT') {
+                patientSection.classList.add('active');
+            } else if (userType === 'DOCTOR') {
+                doctorSection.classList.add('active');
+            } else if (userType === 'NURSE') {
+                nurseSection.classList.add('active');
+            } else if (userType === 'PHARMACIST') {
+                pharmacistSection.classList.add('active');
+            } else if (userType === 'LAB_TECH') {
+                labTechSection.classList.add('active');
+            }
+        }
+        
+        // Add event listener
+        userTypeSelect.addEventListener('change', toggleFields);
+        
+        // Initialize fields visibility
+        toggleFields();
+    });
+</script>
+{% endblock %}
