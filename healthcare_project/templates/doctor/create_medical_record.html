@@ -1,0 +1,236 @@
+<!-- templates/doctor/create_medical_record.html -->
+{% extends 'base.html' %}
+
+{% block title %}Create Medical Record{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3 col-lg-2">
+            <div class="card shadow mb-4">
+                <div class="card-body text-center">
+                    {% if user.profile_picture %}
+                        <img src="{{ user.profile_picture.url }}" alt="{{ user.get_full_name }}" class="rounded-circle img-fluid mb-3" style="width: 100px; height: 100px; object-fit: cover;">
+                    {% else %}
+                        <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 100px; height: 100px;">
+                            <i class="fas fa-user-md fa-3x text-white"></i>
+                        </div>
+                    {% endif %}
+                    <h5 class="mb-0">{{ user.get_full_name }}</h5>
+                    <p class="text-muted">Doctor</p>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="{% url 'doctor:dashboard' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-tachometer-alt me-2"></i> Dashboard
+                    </a>
+                    <a href="{% url 'doctor:appointments' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-calendar-check me-2"></i> Appointments
+                    </a>
+                    <a href="{% url 'doctor:patients' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-user-injured me-2"></i> Patients
+                    </a>
+                    <a href="{% url 'doctor:medical_records' %}" class="list-group-item list-group-item-action active">
+                        <i class="fas fa-file-medical me-2"></i> Medical Records
+                    </a>
+                    <a href="{% url 'doctor:prescriptions' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-prescription me-2"></i> Prescriptions
+                    </a>
+                    <a href="{% url 'doctor:tasks' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-tasks me-2"></i> Tasks
+                    </a>
+                    <a href="{% url 'doctor:schedule' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-clock me-2"></i> Schedule
+                    </a>
+                    <a href="{% url 'doctor:leaves' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-calendar-minus me-2"></i> Leave Requests
+                    </a>
+                    <a href="{% url 'doctor:referrals' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-exchange-alt me-2"></i> Referrals
+                    </a>
+                    <a href="{% url 'doctor:manage_nurses' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-user-nurse me-2"></i> Manage Nurses
+                    </a>
+                    <a href="{% url 'doctor:medicine_inventory' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-pills me-2"></i> Medicines
+                    </a>
+                    <a href="{% url 'accounts:profile' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-user-edit me-2"></i> Profile
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="col-md-9 col-lg-10">
+            <div class="row mb-4 align-items-center">
+                <div class="col">
+                    <h1 class="h3 mb-0 text-gray-800">Create Medical Record</h1>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{% url 'doctor:dashboard' %}">Dashboard</a></li>
+                            <li class="breadcrumb-item"><a href="{% url 'doctor:appointments' %}">Appointments</a></li>
+                            <li class="breadcrumb-item"><a href="{% url 'doctor:appointment_detail' appointment.id %}">Appointment Details</a></li>
+                            <li class="breadcrumb-item active" aria-current="page">Create Medical Record</li>
+                        </ol>
+                    </nav>
+                </div>
+            </div>
+            
+            <!-- Patient Information -->
+            <div class="row mb-4">
+                <div class="col-lg-12">
+                    <div class="card shadow">
+                        <div class="card-header bg-primary text-white">
+                            <h6 class="m-0 font-weight-bold">Patient Information</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong>Name:</strong> {{ appointment.patient.user.get_full_name }}</p>
+                                    <p><strong>Email:</strong> {{ appointment.patient.user.email }}</p>
+                                    <p><strong>Phone:</strong> {{ appointment.patient.user.phone_number }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>Date of Birth:</strong> {{ appointment.patient.user.date_of_birth }}</p>
+                                    <p><strong>Blood Group:</strong> {{ appointment.patient.blood_group }}</p>
+                                    <p><strong>Appointment Date:</strong> {{ appointment.appointment_date }} at {{ appointment.appointment_time }}</p>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-4">
+                                <h6 class="font-weight-bold">Reason for Appointment:</h6>
+                                <p>{{ appointment.reason }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Medical Record Form -->
+            <div class="row mb-4">
+                <div class="col-lg-12">
+                    <div class="card shadow">
+                        <div class="card-header bg-success text-white">
+                            <h6 class="m-0 font-weight-bold">Medical Record</h6>
+                        </div>
+                        <div class="card-body">
+                            <form method="post">
+                                {% csrf_token %}
+                                
+                                <div class="mb-4">
+                                    <label for="id_symptoms" class="form-label">Symptoms</label>
+                                    {{ med_record_form.symptoms }}
+                                    {% if med_record_form.symptoms.errors %}
+                                        <div class="text-danger small">
+                                            {% for error in med_record_form.symptoms.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <label for="id_diagnosis" class="form-label">Diagnosis</label>
+                                    {{ med_record_form.diagnosis }}
+                                    {% if med_record_form.diagnosis.errors %}
+                                        <div class="text-danger small">
+                                            {% for error in med_record_form.diagnosis.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <label for="id_treatment" class="form-label">Treatment</label>
+                                    {{ med_record_form.treatment }}
+                                    {% if med_record_form.treatment.errors %}
+                                        <div class="text-danger small">
+                                            {% for error in med_record_form.treatment.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <label for="id_notes" class="form-label">Additional Notes</label>
+                                    {{ med_record_form.notes }}
+                                    {% if med_record_form.notes.errors %}
+                                        <div class="text-danger small">
+                                            {% for error in med_record_form.notes.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <h5 class="mt-5 mb-4">Treatment Plan</h5>
+                                
+                                <div class="mb-4">
+                                    <label for="id_treatment_plan" class="form-label">Treatment Plan</label>
+                                    {{ treatment_form.treatment_plan }}
+                                    {% if treatment_form.treatment_plan.errors %}
+                                        <div class="text-danger small">
+                                            {% for error in treatment_form.treatment_plan.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6 mb-4">
+                                        <label for="id_follow_up_date" class="form-label">Follow-up Date (if needed)</label>
+                                        {{ treatment_form.follow_up_date }}
+                                        {% if treatment_form.follow_up_date.errors %}
+                                            <div class="text-danger small">
+                                                {% for error in treatment_form.follow_up_date.errors %}
+                                                    {{ error }}
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <div class="col-md-6 mb-4">
+                                        <label for="id_follow_up_notes" class="form-label">Follow-up Notes</label>
+                                        {{ treatment_form.follow_up_notes }}
+                                        {% if treatment_form.follow_up_notes.errors %}
+                                            <div class="text-danger small">
+                                                {% for error in treatment_form.follow_up_notes.errors %}
+                                                    {{ error }}
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                
+                                <div class="mt-4 d-flex justify-content-between">
+                                    <a href="{% url 'doctor:appointment_detail' appointment.id %}" class="btn btn-secondary">Cancel</a>
+                                    <button type="submit" class="btn btn-primary">Save Medical Record</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add Bootstrap classes to form inputs
+        document.getElementById('id_symptoms').classList.add('form-control');
+        document.getElementById('id_diagnosis').classList.add('form-control');
+        document.getElementById('id_treatment').classList.add('form-control');
+        document.getElementById('id_notes').classList.add('form-control');
+        document.getElementById('id_treatment_plan').classList.add('form-control');
+        document.getElementById('id_follow_up_date').classList.add('form-control');
+        document.getElementById('id_follow_up_notes').classList.add('form-control');
+    });
+</script>
+{% endblock %}

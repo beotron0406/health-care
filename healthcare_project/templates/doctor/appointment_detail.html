@@ -1,0 +1,281 @@
+<!-- templates/doctor/appointment_detail.html -->
+{% extends 'base.html' %}
+
+{% block title %}Appointment Details{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3 col-lg-2">
+            <div class="card shadow mb-4">
+                <div class="card-body text-center">
+                    {% if user.profile_picture %}
+                        <img src="{{ user.profile_picture.url }}" alt="{{ user.get_full_name }}" class="rounded-circle img-fluid mb-3" style="width: 100px; height: 100px; object-fit: cover;">
+                    {% else %}
+                        <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 100px; height: 100px;">
+                            <i class="fas fa-user-md fa-3x text-white"></i>
+                        </div>
+                    {% endif %}
+                    <h5 class="mb-0">{{ user.get_full_name }}</h5>
+                    <p class="text-muted">{% if is_doctor %}Doctor{% else %}Nurse{% endif %}</p>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="{% url 'doctor:dashboard' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-tachometer-alt me-2"></i> Dashboard
+                    </a>
+                    <a href="{% url 'doctor:appointments' %}" class="list-group-item list-group-item-action active">
+                        <i class="fas fa-calendar-check me-2"></i> Appointments
+                    </a>
+                    <a href="{% url 'doctor:patients' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-user-injured me-2"></i> Patients
+                    </a>
+                    <a href="{% url 'doctor:medical_records' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-file-medical me-2"></i> Medical Records
+                    </a>
+                    <a href="{% url 'doctor:prescriptions' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-prescription me-2"></i> Prescriptions
+                    </a>
+                    <a href="{% url 'doctor:tasks' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-tasks me-2"></i> Tasks
+                    </a>
+                    {% if is_doctor %}
+                        <a href="{% url 'doctor:schedule' %}" class="list-group-item list-group-item-action">
+                            <i class="fas fa-clock me-2"></i> Schedule
+                        </a>
+                        <a href="{% url 'doctor:leaves' %}" class="list-group-item list-group-item-action">
+                            <i class="fas fa-calendar-minus me-2"></i> Leave Requests
+                        </a>
+                        <a href="{% url 'doctor:referrals' %}" class="list-group-item list-group-item-action">
+                            <i class="fas fa-exchange-alt me-2"></i> Referrals
+                        </a>
+                        <a href="{% url 'doctor:manage_nurses' %}" class="list-group-item list-group-item-action">
+                            <i class="fas fa-user-nurse me-2"></i> Manage Nurses
+                        </a>
+                    {% endif %}
+                    <a href="{% url 'doctor:medicine_inventory' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-pills me-2"></i> Medicines
+                    </a>
+                    <a href="{% url 'accounts:profile' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-user-edit me-2"></i> Profile
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="col-md-9 col-lg-10">
+            <div class="row mb-4 align-items-center">
+                <div class="col">
+                    <h1 class="h3 mb-0 text-gray-800">Appointment Details</h1>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{% url 'doctor:dashboard' %}">Dashboard</a></li>
+                            <li class="breadcrumb-item"><a href="{% url 'doctor:appointments' %}">Appointments</a></li>
+                            <li class="breadcrumb-item active" aria-current="page">Appointment Details</li>
+                        </ol>
+                    </nav>
+                </div>
+                <div class="col-auto">
+                    {% if is_doctor and appointment.status == 'SCHEDULED' %}
+                        <a href="{% url 'doctor:create_medical_record' appointment.id %}" class="btn btn-primary">
+                            <i class="fas fa-file-medical me-2"></i> Create Medical Record
+                        </a>
+                    {% endif %}
+                    <a href="{% url 'doctor:patient_detail' appointment.patient.id %}" class="btn btn-info">
+                        <i class="fas fa-user-injured me-2"></i> View Patient Details
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Appointment Information -->
+            <div class="row mb-4">
+                <div class="col-lg-12">
+                    <div class="card shadow">
+                        <div class="card-header bg-primary text-white">
+                            <h6 class="m-0 font-weight-bold">Appointment Information</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h5 class="mb-3">Patient Information</h5>
+                                    <p><strong>Name:</strong> {{ appointment.patient.user.get_full_name }}</p>
+                                    <p><strong>Email:</strong> {{ appointment.patient.user.email }}</p>
+                                    <p><strong>Phone:</strong> {{ appointment.patient.user.phone_number }}</p>
+                                    <p><strong>Date of Birth:</strong> {{ appointment.patient.user.date_of_birth }}</p>
+                                    <p><strong>Blood Group:</strong> {{ appointment.patient.blood_group }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <h5 class="mb-3">Appointment Details</h5>
+                                    <p><strong>Date:</strong> {{ appointment.appointment_date }}</p>
+                                    <p><strong>Time:</strong> {{ appointment.appointment_time }}</p>
+                                    <p><strong>Status:</strong> 
+                                        {% if appointment.status == 'SCHEDULED' %}
+                                            <span class="badge bg-primary">Scheduled</span>
+                                        {% elif appointment.status == 'COMPLETED' %}
+                                            <span class="badge bg-success">Completed</span>
+                                        {% elif appointment.status == 'CANCELLED' %}
+                                            <span class="badge bg-danger">Cancelled</span>
+                                        {% elif appointment.status == 'NO_SHOW' %}
+                                            <span class="badge bg-warning">No Show</span>
+                                        {% endif %}
+                                    </p>
+                                    <p><strong>Created:</strong> {{ appointment.created_at }}</p>
+                                    <p><strong>Last Updated:</strong> {{ appointment.updated_at }}</p>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-4">
+                                <h5 class="mb-3">Reason for Appointment</h5>
+                                <p>{{ appointment.reason }}</p>
+                            </div>
+                            
+                            {% if appointment.notes %}
+                                <div class="mt-4">
+                                    <h5 class="mb-3">Notes</h5>
+                                    <p>{{ appointment.notes }}</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Update Appointment Status -->
+            {% if appointment.status == 'SCHEDULED' %}
+                <div class="row mb-4">
+                    <div class="col-lg-12">
+                        <div class="card shadow">
+                            <div class="card-header bg-info text-white">
+                                <h6 class="m-0 font-weight-bold">Update Appointment Status</h6>
+                            </div>
+                            <div class="card-body">
+                                <form method="post">
+                                    {% csrf_token %}
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="id_status" class="form-label">Status</label>
+                                                {{ form.status }}
+                                                {% if form.status.errors %}
+                                                    <div class="text-danger small">
+                                                        {% for error in form.status.errors %}
+                                                            {{ error }}
+                                                        {% endfor %}
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="id_notes" class="form-label">Notes</label>
+                                                {{ form.notes }}
+                                                {% if form.notes.errors %}
+                                                    <div class="text-danger small">
+                                                        {% for error in form.notes.errors %}
+                                                            {{ error }}
+                                                        {% endfor %}
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mt-3">
+                                        <button type="submit" class="btn btn-primary">Update Status</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+            
+            <!-- Patient Medical History -->
+            <div class="row">
+                <div class="col-lg-6 mb-4">
+                    <div class="card shadow">
+                        <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                            <h6 class="m-0 font-weight-bold">Medical Records</h6>
+                            <a href="{% url 'doctor:medical_records' %}?patient={{ appointment.patient.user.get_full_name }}" class="btn btn-sm btn-light">View All</a>
+                        </div>
+                        <div class="card-body">
+                            {% if medical_records %}
+                                <div class="list-group">
+                                    {% for record in medical_records|slice:":5" %}
+                                        <a href="{% url 'doctor:medical_record_detail' record.id %}" class="list-group-item list-group-item-action">
+                                            <div class="d-flex w-100 justify-content-between">
+                                                <h6 class="mb-1">{{ record.date_created|date:"F d, Y" }}</h6>
+                                            </div>
+                                            <p class="mb-1">{{ record.diagnosis|truncatechars:50 }}</p>
+                                            <small class="text-muted">Click to view details</small>
+                                        </a>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="text-center py-4">
+                                    <i class="fas fa-file-medical fa-3x text-muted mb-3"></i>
+                                    <p>No medical records found for this patient.</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-6 mb-4">
+                    <div class="card shadow">
+                        <div class="card-header bg-warning text-white d-flex justify-content-between align-items-center">
+                            <h6 class="m-0 font-weight-bold">Prescriptions</h6>
+                            <a href="{% url 'doctor:prescriptions' %}?patient={{ appointment.patient.user.get_full_name }}" class="btn btn-sm btn-light">View All</a>
+                        </div>
+                        <div class="card-body">
+                            {% if prescriptions %}
+                                <div class="list-group">
+                                    {% for prescription in prescriptions|slice:":5" %}
+                                        <a href="{% url 'doctor:prescription_detail' prescription.id %}" class="list-group-item list-group-item-action">
+                                            <div class="d-flex w-100 justify-content-between">
+                                                <h6 class="mb-1">{{ prescription.date_prescribed }}</h6>
+                                                <small>
+                                                    {% if prescription.is_active %}
+                                                        <span class="badge bg-success">Active</span>
+                                                    {% else %}
+                                                        <span class="badge bg-secondary">Inactive</span>
+                                                    {% endif %}
+                                                </small>
+                                            </div>
+                                            <p class="mb-1">{{ prescription.notes|default:"No notes"|truncatechars:50 }}</p>
+                                            <small class="text-muted">Click to view details</small>
+                                        </a>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="text-center py-4">
+                                    <i class="fas fa-prescription fa-3x text-muted mb-3"></i>
+                                    <p>No prescriptions found for this patient.</p>
+                                    {% if is_doctor %}
+                                    <div class="mt-3">
+                                        <a href="{% url 'doctor:create_prescription_for_patient' appointment.patient.id %}" class="btn btn-primary">
+                                            <i class="fas fa-prescription me-2"></i> Create New Prescription
+                                        </a>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add form styling
+        document.getElementById('id_status').classList.add('form-select');
+        document.getElementById('id_notes').classList.add('form-control');
+    });
+</script>
+{% endblock %}

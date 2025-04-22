@@ -1,0 +1,468 @@
+<!-- templates/doctor/dashboard.html -->
+{% extends 'base.html' %}
+
+{% block title %}{% if is_doctor %}Doctor{% else %}Nurse{% endif %} Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3 col-lg-2">
+            <div class="card shadow mb-4">
+                <div class="card-body text-center">
+                    {% if user.profile_picture %}
+                        <img src="{{ user.profile_picture.url }}" alt="{{ user.get_full_name }}" class="rounded-circle img-fluid mb-3" style="width: 100px; height: 100px; object-fit: cover;">
+                    {% else %}
+                        <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 100px; height: 100px;">
+                            <i class="fas fa-user-md fa-3x text-white"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-success shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                        Upcoming Appointments</div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ upcoming_appointments.count }}</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-calendar-alt fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-info shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                        Recent Medical Records</div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ recent_records.count }}</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-file-medical fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-warning shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                        Pending Tasks</div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ tasks|length }}</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-tasks fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <!-- Today's Appointments -->
+                <div class="col-xl-8 mb-4">
+                    <div class="card shadow">
+                        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                            <h6 class="m-0 font-weight-bold">Today's Appointments</h6>
+                            <a href="{% url 'doctor:appointments' %}" class="btn btn-sm btn-light">View All</a>
+                        </div>
+                        <div class="card-body">
+                            {% if today_appointments %}
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Time</th>
+                                                <th>Patient</th>
+                                                <th>Reason</th>
+                                                <th>Status</th>
+                                                <th>Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for appointment in today_appointments %}
+                                                <tr>
+                                                    <td>{{ appointment.appointment_time }}</td>
+                                                    <td>{{ appointment.patient.user.get_full_name }}</td>
+                                                    <td>{{ appointment.reason|truncatechars:30 }}</td>
+                                                    <td>
+                                                        {% if appointment.status == 'SCHEDULED' %}
+                                                            <span class="badge bg-primary">Scheduled</span>
+                                                        {% elif appointment.status == 'COMPLETED' %}
+                                                            <span class="badge bg-success">Completed</span>
+                                                        {% elif appointment.status == 'CANCELLED' %}
+                                                            <span class="badge bg-danger">Cancelled</span>
+                                                        {% elif appointment.status == 'NO_SHOW' %}
+                                                            <span class="badge bg-warning">No Show</span>
+                                                        {% endif %}
+                                                    </td>
+                                                    <td>
+                                                        <a href="{% url 'doctor:appointment_detail' appointment.id %}" class="btn btn-sm btn-info me-1" title="View">
+                                                            <i class="fas fa-eye"></i>
+                                                        </a>
+                                                        {% if appointment.status == 'SCHEDULED' and is_doctor %}
+                                                            <a href="{% url 'doctor:create_medical_record' appointment.id %}" class="btn btn-sm btn-success" title="Create Medical Record">
+                                                                <i class="fas fa-file-medical"></i>
+                                                            </a>
+                                                        {% endif %}
+                                                    </td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% else %}
+                                <div class="text-center py-4">
+                                    <i class="fas fa-calendar fa-3x text-muted mb-3"></i>
+                                    <p>You don't have any appointments scheduled for today.</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Tasks -->
+                <div class="col-xl-4 mb-4">
+                    <div class="card shadow">
+                        <div class="card-header bg-warning text-white d-flex justify-content-between align-items-center">
+                            <h6 class="m-0 font-weight-bold">Tasks</h6>
+                            <a href="{% url 'doctor:tasks' %}" class="btn btn-sm btn-light">View All</a>
+                        </div>
+                        <div class="card-body">
+                            {% if tasks %}
+                                <div class="list-group">
+                                    {% for task in tasks %}
+                                        <a href="{% url 'doctor:task_detail' task.id %}" class="list-group-item list-group-item-action">
+                                            <div class="d-flex w-100 justify-content-between">
+                                                <h6 class="mb-1">{{ task.title }}</h6>
+                                                <small>
+                                                    {% if task.priority == 0 %}
+                                                        <span class="badge bg-secondary">Low</span>
+                                                    {% elif task.priority == 1 %}
+                                                        <span class="badge bg-info">Medium</span>
+                                                    {% elif task.priority == 2 %}
+                                                        <span class="badge bg-danger">High</span>
+                                                    {% endif %}
+                                                </small>
+                                            </div>
+                                            <p class="mb-1 text-truncate">{{ task.description }}</p>
+                                            <div class="d-flex justify-content-between">
+                                                <small class="text-muted">
+                                                    Due: {{ task.due_date|date:"M d, Y" }}
+                                                </small>
+                                                <small>
+                                                    {% if task.status == 'PENDING' %}
+                                                        <span class="badge bg-primary">Pending</span>
+                                                    {% elif task.status == 'IN_PROGRESS' %}
+                                                        <span class="badge bg-info">In Progress</span>
+                                                    {% elif task.status == 'COMPLETED' %}
+                                                        <span class="badge bg-success">Completed</span>
+                                                    {% elif task.status == 'CANCELLED' %}
+                                                        <span class="badge bg-danger">Cancelled</span>
+                                                    {% endif %}
+                                                </small>
+                                            </div>
+                                        </a>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="text-center py-4">
+                                    <i class="fas fa-tasks fa-3x text-muted mb-3"></i>
+                                    <p>You don't have any pending tasks.</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <!-- Upcoming Appointments -->
+                <div class="col-xl-6 mb-4">
+                    <div class="card shadow">
+                        <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                            <h6 class="m-0 font-weight-bold">Upcoming Appointments</h6>
+                            <a href="{% url 'doctor:appointments' %}" class="btn btn-sm btn-light">View All</a>
+                        </div>
+                        <div class="card-body">
+                            {% if upcoming_appointments %}
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Date</th>
+                                                <th>Time</th>
+                                                <th>Patient</th>
+                                                <th>Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for appointment in upcoming_appointments %}
+                                                <tr>
+                                                    <td>{{ appointment.appointment_date }}</td>
+                                                    <td>{{ appointment.appointment_time }}</td>
+                                                    <td>{{ appointment.patient.user.get_full_name }}</td>
+                                                    <td>
+                                                        <a href="{% url 'doctor:appointment_detail' appointment.id %}" class="btn btn-sm btn-info" title="View">
+                                                            <i class="fas fa-eye"></i>
+                                                        </a>
+                                                    </td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% else %}
+                                <div class="text-center py-4">
+                                    <i class="fas fa-calendar-alt fa-3x text-muted mb-3"></i>
+                                    <p>You don't have any upcoming appointments.</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Recent Medical Records -->
+                <div class="col-xl-6 mb-4">
+                    <div class="card shadow">
+                        <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                            <h6 class="m-0 font-weight-bold">Recent Medical Records</h6>
+                            <a href="{% url 'doctor:medical_records' %}" class="btn btn-sm btn-light">View All</a>
+                        </div>
+                        <div class="card-body">
+                            {% if recent_records %}
+                                <div class="list-group">
+                                    {% for record in recent_records %}
+                                        <a href="{% url 'doctor:medical_record_detail' record.id %}" class="list-group-item list-group-item-action">
+                                            <div class="d-flex w-100 justify-content-between">
+                                                <h6 class="mb-1">{{ record.patient.user.get_full_name }}</h6>
+                                                <small>{{ record.date_created|date:"F d, Y" }}</small>
+                                            </div>
+                                            <p class="mb-1 text-truncate">{{ record.diagnosis }}</p>
+                                            <small class="text-muted">Click to view details</small>
+                                        </a>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="text-center py-4">
+                                    <i class="fas fa-file-medical fa-3x text-muted mb-3"></i>
+                                    <p>You haven't created any medical records yet.</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Quick Actions -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card shadow">
+                        <div class="card-header bg-light">
+                            <h6 class="m-0 font-weight-bold">Quick Actions</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                {% if is_doctor %}
+                                <div class="col-md-3 mb-3 mb-md-0">
+                                    <a href="{% url 'doctor:schedule' %}" class="btn btn-primary btn-lg btn-block d-flex flex-column align-items-center p-3">
+                                        <i class="fas fa-clock fa-2x mb-2"></i>
+                                        Manage Schedule
+                                    </a>
+                                </div>
+                                <div class="col-md-3 mb-3 mb-md-0">
+                                    <a href="{% url 'doctor:request_leave' %}" class="btn btn-info btn-lg btn-block d-flex flex-column align-items-center p-3">
+                                        <i class="fas fa-calendar-minus fa-2x mb-2"></i>
+                                        Request Leave
+                                    </a>
+                                </div>
+                                <div class="col-md-3 mb-3 mb-md-0">
+                                    <a href="{% url 'doctor:tasks' %}" class="btn btn-success btn-lg btn-block d-flex flex-column align-items-center p-3">
+                                        <i class="fas fa-tasks fa-2x mb-2"></i>
+                                        Assign Tasks
+                                    </a>
+                                </div>
+                                <div class="col-md-3">
+                                    <a href="{% url 'doctor:referrals' %}" class="btn btn-warning btn-lg btn-block d-flex flex-column align-items-center p-3">
+                                        <i class="fas fa-exchange-alt fa-2x mb-2"></i>
+                                        Manage Referrals
+                                    </a>
+                                </div>
+                                {% else %}
+                                <div class="col-md-4 mb-3 mb-md-0">
+                                    <a href="{% url 'doctor:tasks' %}" class="btn btn-primary btn-lg btn-block d-flex flex-column align-items-center p-3">
+                                        <i class="fas fa-tasks fa-2x mb-2"></i>
+                                        View Tasks
+                                    </a>
+                                </div>
+                                <div class="col-md-4 mb-3 mb-md-0">
+                                    <a href="{% url 'doctor:patients' %}" class="btn btn-info btn-lg btn-block d-flex flex-column align-items-center p-3">
+                                        <i class="fas fa-user-injured fa-2x mb-2"></i>
+                                        View Patients
+                                    </a>
+                                </div>
+                                <div class="col-md-4">
+                                    <a href="{% url 'doctor:appointments' %}" class="btn btn-success btn-lg btn-block d-flex flex-column align-items-center p-3">
+                                        <i class="fas fa-calendar-check fa-2x mb-2"></i>
+                                        Today's Appointments
+                                    </a>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Any additional JavaScript for the dashboard
+    });
+</script>
+{% endblock %}{% endif %}
+                    <h5 class="mb-0">{{ user.get_full_name }}</h5>
+                    <p class="text-muted">{% if is_doctor %}Doctor{% else %}Nurse{% endif %}</p>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="{% url 'doctor:dashboard' %}" class="list-group-item list-group-item-action active">
+                        <i class="fas fa-tachometer-alt me-2"></i> Dashboard
+                    </a>
+                    <a href="{% url 'doctor:appointments' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-calendar-check me-2"></i> Appointments
+                    </a>
+                    <a href="{% url 'doctor:patients' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-user-injured me-2"></i> Patients
+                    </a>
+                    <a href="{% url 'doctor:medical_records' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-file-medical me-2"></i> Medical Records
+                    </a>
+                    <a href="{% url 'doctor:prescriptions' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-prescription me-2"></i> Prescriptions
+                    </a>
+                    <a href="{% url 'doctor:tasks' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-tasks me-2"></i> Tasks
+                    </a>
+                    {% if is_doctor %}
+                        <a href="{% url 'doctor:schedule' %}" class="list-group-item list-group-item-action">
+                            <i class="fas fa-clock me-2"></i> Schedule
+                        </a>
+                        <a href="{% url 'doctor:leaves' %}" class="list-group-item list-group-item-action">
+                            <i class="fas fa-calendar-minus me-2"></i> Leave Requests
+                        </a>
+                        <a href="{% url 'doctor:referrals' %}" class="list-group-item list-group-item-action">
+                            <i class="fas fa-exchange-alt me-2"></i> Referrals
+                        </a>
+                        <a href="{% url 'doctor:manage_nurses' %}" class="list-group-item list-group-item-action">
+                            <i class="fas fa-user-nurse me-2"></i> Manage Nurses
+                        </a>
+                    {% endif %}
+                    <a href="{% url 'doctor:medicine_inventory' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-pills me-2"></i> Medicines
+                    </a>
+                    <a href="{% url 'accounts:profile' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-user-edit me-2"></i> Profile
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="col-md-9 col-lg-10">
+            <div class="row mb-4">
+                <div class="col">
+                    <h1 class="h3 mb-0 text-gray-800">Dashboard</h1>
+                    <p class="text-muted">Welcome back, {{ user.first_name }}!</p>
+                </div>
+            </div>
+            
+            <!-- Quick Stats -->
+            <div class="row mb-4">
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-primary shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                        Today's Appointments</div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ today_appointments.count }}</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-calendar-day fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-success shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                        Total Patients</div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_patients.count }}</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-users fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-info shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                        Total Medical Records</div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_records.count }}</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-file-medical-alt fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-warning shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                        Total Prescriptions</div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_prescriptions.count }}</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-prescription-bottle-alt fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}

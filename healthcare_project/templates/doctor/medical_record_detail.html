@@ -1,0 +1,245 @@
+<!-- templates/doctor/medical_record_detail.html -->
+{% extends 'base.html' %}
+
+{% block title %}Medical Record Details{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3 col-lg-2">
+            <div class="card shadow mb-4">
+                <div class="card-body text-center">
+                    {% if user.profile_picture %}
+                        <img src="{{ user.profile_picture.url }}" alt="{{ user.get_full_name }}" class="rounded-circle img-fluid mb-3" style="width: 100px; height: 100px; object-fit: cover;">
+                    {% else %}
+                        <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 100px; height: 100px;">
+                            <i class="fas fa-user-md fa-3x text-white"></i>
+                        </div>
+                    {% endif %}
+                    <h5 class="mb-0">{{ user.get_full_name }}</h5>
+                    <p class="text-muted">{% if is_doctor %}Doctor{% else %}Nurse{% endif %}</p>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="{% url 'doctor:dashboard' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-tachometer-alt me-2"></i> Dashboard
+                    </a>
+                    <a href="{% url 'doctor:appointments' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-calendar-check me-2"></i> Appointments
+                    </a>
+                    <a href="{% url 'doctor:patients' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-user-injured me-2"></i> Patients
+                    </a>
+                    <a href="{% url 'doctor:medical_records' %}" class="list-group-item list-group-item-action active">
+                        <i class="fas fa-file-medical me-2"></i> Medical Records
+                    </a>
+                    <a href="{% url 'doctor:prescriptions' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-prescription me-2"></i> Prescriptions
+                    </a>
+                    <a href="{% url 'doctor:tasks' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-tasks me-2"></i> Tasks
+                    </a>
+                    {% if is_doctor %}
+                        <a href="{% url 'doctor:schedule' %}" class="list-group-item list-group-item-action">
+                            <i class="fas fa-clock me-2"></i> Schedule
+                        </a>
+                        <a href="{% url 'doctor:leaves' %}" class="list-group-item list-group-item-action">
+                            <i class="fas fa-calendar-minus me-2"></i> Leave Requests
+                        </a>
+                        <a href="{% url 'doctor:referrals' %}" class="list-group-item list-group-item-action">
+                            <i class="fas fa-exchange-alt me-2"></i> Referrals
+                        </a>
+                        <a href="{% url 'doctor:manage_nurses' %}" class="list-group-item list-group-item-action">
+                            <i class="fas fa-user-nurse me-2"></i> Manage Nurses
+                        </a>
+                    {% endif %}
+                    <a href="{% url 'doctor:medicine_inventory' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-pills me-2"></i> Medicines
+                    </a>
+                    <a href="{% url 'accounts:profile' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-user-edit me-2"></i> Profile
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="col-md-9 col-lg-10">
+            <div class="row mb-4 align-items-center">
+                <div class="col">
+                    <h1 class="h3 mb-0 text-gray-800">Medical Record Details</h1>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{% url 'doctor:dashboard' %}">Dashboard</a></li>
+                            <li class="breadcrumb-item"><a href="{% url 'doctor:medical_records' %}">Medical Records</a></li>
+                            <li class="breadcrumb-item active" aria-current="page">Medical Record Details</li>
+                        </ol>
+                    </nav>
+                </div>
+                <div class="col-auto">
+                    {% if is_doctor %}
+                        <a href="{% url 'doctor:edit_medical_record' record.id %}" class="btn btn-primary">
+                            <i class="fas fa-edit me-2"></i> Edit Record
+                        </a>
+                        <a href="{% url 'doctor:create_prescription_from_record' record.id %}" class="btn btn-success">
+                            <i class="fas fa-prescription me-2"></i> Create Prescription
+                        </a>
+                    {% endif %}
+                    <a href="{% url 'doctor:patient_detail' record.patient.id %}" class="btn btn-info">
+                        <i class="fas fa-user-injured me-2"></i> View Patient
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Patient Information -->
+            <div class="row mb-4">
+                <div class="col-lg-12">
+                    <div class="card shadow">
+                        <div class="card-header bg-primary text-white">
+                            <h6 class="m-0 font-weight-bold">Patient Information</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong>Name:</strong> {{ record.patient.user.get_full_name }}</p>
+                                    <p><strong>Email:</strong> {{ record.patient.user.email }}</p>
+                                    <p><strong>Phone:</strong> {{ record.patient.user.phone_number }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>Date of Birth:</strong> {{ record.patient.user.date_of_birth }}</p>
+                                    <p><strong>Blood Group:</strong> {{ record.patient.blood_group }}</p>
+                                    <p><strong>Record Created:</strong> {{ record.date_created }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Medical Record Details -->
+            <div class="row mb-4">
+                <div class="col-lg-12">
+                    <div class="card shadow">
+                        <div class="card-header bg-success text-white">
+                            <h6 class="m-0 font-weight-bold">Medical Record Details</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-4">
+                                <h5 class="font-weight-bold">Symptoms</h5>
+                                <p>{{ record.symptoms }}</p>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <h5 class="font-weight-bold">Diagnosis</h5>
+                                <p>{{ record.diagnosis }}</p>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <h5 class="font-weight-bold">Treatment</h5>
+                                <p>{{ record.treatment }}</p>
+                            </div>
+                            
+                            {% if record.notes %}
+                                <div class="mb-4">
+                                    <h5 class="font-weight-bold">Additional Notes</h5>
+                                    <p>{{ record.notes }}</p>
+                                </div>
+                            {% endif %}
+                            
+                            {% if treatment %}
+                                <div class="mb-4">
+                                    <h5 class="font-weight-bold">Treatment Plan</h5>
+                                    <p>{{ treatment.treatment_plan }}</p>
+                                    
+                                    {% if treatment.follow_up_date %}
+                                        <p><strong>Follow-up Date:</strong> {{ treatment.follow_up_date }}</p>
+                                    {% endif %}
+                                    
+                                    {% if treatment.follow_up_notes %}
+                                        <p><strong>Follow-up Notes:</strong> {{ treatment.follow_up_notes }}</p>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                            
+                            <div class="mb-4">
+                                <h5 class="font-weight-bold">Record Information</h5>
+                                <p><strong>Created:</strong> {{ record.date_created }}</p>
+                                <p><strong>Last Updated:</strong> {{ record.date_updated }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Associated Prescriptions -->
+            <div class="row mb-4">
+                <div class="col-lg-12">
+                    <div class="card shadow">
+                        <div class="card-header bg-warning text-white d-flex justify-content-between align-items-center">
+                            <h6 class="m-0 font-weight-bold">Associated Prescriptions</h6>
+                            {% if is_doctor %}
+                                <a href="{% url 'doctor:create_prescription_from_record' record.id %}" class="btn btn-sm btn-light">
+                                    <i class="fas fa-plus me-2"></i>Create New
+                                </a>
+                            {% endif %}
+                        </div>
+                        <div class="card-body">
+                            {% if prescriptions %}
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Date</th>
+                                                <th>Status</th>
+                                                <th>Expiry Date</th>
+                                                <th>Notes</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for prescription in prescriptions %}
+                                                <tr>
+                                                    <td>{{ prescription.date_prescribed }}</td>
+                                                    <td>
+                                                        {% if prescription.is_active %}
+                                                            <span class="badge bg-success">Active</span>
+                                                        {% else %}
+                                                            <span class="badge bg-secondary">Inactive</span>
+                                                        {% endif %}
+                                                    </td>
+                                                    <td>{{ prescription.expiry_date|default:"N/A" }}</td>
+                                                    <td>{{ prescription.notes|truncatechars:50|default:"No notes" }}</td>
+                                                    <td>
+                                                        <a href="{% url 'doctor:prescription_detail' prescription.id %}" class="btn btn-sm btn-info" title="View">
+                                                            <i class="fas fa-eye"></i>
+                                                        </a>
+                                                        {% if is_doctor and prescription.is_active %}
+                                                            <a href="{% url 'doctor:edit_prescription' prescription.id %}" class="btn btn-sm btn-primary" title="Edit">
+                                                                <i class="fas fa-edit"></i>
+                                                            </a>
+                                                        {% endif %}
+                                                    </td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% else %}
+                                <div class="text-center py-4">
+                                    <i class="fas fa-prescription fa-3x text-muted mb-3"></i>
+                                    <p>No prescriptions associated with this medical record.</p>
+                                    {% if is_doctor %}
+                                        <a href="{% url 'doctor:create_prescription_from_record' record.id %}" class="btn btn-primary">
+                                            Create Prescription
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
